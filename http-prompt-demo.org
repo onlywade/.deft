@@ -1,0 +1,398 @@
+#+TITLE: http-prompt: a crash course
+
+* Intro
+
+** What even /is/ it?
+
+*Http-prompt is an interactive terminal application for issuing hand-crafted HTTP requests.*
+
+I like to think of it as a simplified, terminal-based friend of Postman (or, a more personable relative of curl!).
+
+Its delicious syntax is based on HTTPie, a popular and much more cleverly named Python library.
+
+** Okay but Why?
+
+It offers exquisite creature comforts for shell-dwellers!
+
+HTTP is a textual protocol. Some find it more natural to interact with it through a text-first interface, rather than via a GUI.
+
+While there are some other terminal-based HTTP clients, http-prompt is in a league of its own. The key differentiator, as you'll see, is that http-prompt is both *interactive* and *contextual*. These attributes lead to useful features, and a marked improvement in overall ergonomics.
+
+** How might it be useful to me?
+
+Http-prompt can be your friend any time you find yourself:
+
+- Exploring a new API
+- Troubleshooting problems with your own API
+- Running ad-hoc API requests as part of day-to-day testing, debugging, or analysis tasks
+
+Basically any time you want to set up a "tinkering workflow" involving permutations of API requests, http-prompt can help.
+
+* Installation and basic usage
+
+** Installation
+
+Http-prompt is a Python application with only a few simple dependencies. The latest version only supports Python 3, so if you're on an older Python version, be sure to install http-prompt 1.0.0 for Python 2 compatibility.
+
+*** Checking which Python version you have
+
+If you're not sure which Python version you have installed, run this command to find out:
+
+#+BEGIN_SRC shell
+python --version
+#+END_SRC shell
+
+*** For Python 2
+
+#+BEGIN_SRC shell
+$ pip install http-prompt==1.0.0
+#+END_SRC
+
+*** For Python 3
+
+#+BEGIN_SRC shell
+$ pip install http-prompt
+#+END_SRC
+
+*** If all else fails
+
+SSH into my VM and use the pre-installed version there. :) TODO
+
+
+** Basic usage
+
+Note: for illustration purposes, I'm going to be making requests against the excellent httpbin, for starters. This API basically just echoes back whatever requests we send it, which is perfect for testing out a client.
+
+*** Launching and Request syntax
+
+You can launch http-prompt without any arguments, and start making requests:
+
+#+BEGIN_SRC http-prompt
+$ http-prompt
+
+get https://httpbin.org/anything
+#+END_SRC
+
+Or, launch it with a base URL as an argument. Now you can make requests by specifying just the relative path:
+
+#+BEGIN_SRC http-prompt
+$ http-prompt https://httpbin.org
+
+get /anything
+
+get /status/302
+#+END_SRC
+
+Cool.
+
+As you see, to make a request using a given HTTP method, you just use the appropriate method/verb (e.g. "get") followed by a URL or path.
+
+To make request using other HTTP methods, just use the corresponding verb as the command, e.g. "post", "put", or "delete". Notice how the httpbin /anything API reports back which type of request it received.
+
+There you have it - this is the core functionality of the utility.
+
+*** Request headers (and introducing session context)
+
+To send an HTTP header with a request, you simply add the header name and value, separated by a colon, to your command, like so:
+
+#+BEGIN_SRC http-prompt
+get /anything Accept:food/pie
+#+END_SRC
+
+Many APIs will require a certain header to be sent with *every* request, typically for authentication. Including the header "inline" with every single command can become tiresome. Http-prompt offers an affordance for this pattern in its /session context/ mechanism.
+
+If you specify a header key/value pair -- *without actually issuing a request command along with it* -- then the header will be saved in the http-prompt session's context, and automatically sent along with every subsequent request:
+
+#+BEGIN_SRC http-prompt
+Authorization:"Bearer super-secret-token" # <--- this saves the header in the context
+
+env              # <--- this command shows the current context
+
+get /anything    # <--- this request will include the Authorization header
+get /more        # <--- this request will, too
+#+END_SRC
+
+When you don't want the header to be sent anymore, you can remove it from the context as follows:
+
+#+BEGIN_SRC http-prompt
+rm -h Authorization     # <--- this removes the Authorization header from the context
+
+env              # <--- this command shows the current context
+
+get /anything    # <--- this request will not include the Authorization header
+#+END_SRC
+
+*** Query parameters
+
+Sending a query parameter with a request works the same was as sending a header, except that the key and value are seperated with a pair of equal signs instead of with a colon:
+
+#+BEGIN_SRC http-prompt
+get /anything q==twlo
+#+END_SRC
+
+Oftentimes you'll need to include more than one query parameter. This works just like you'd expect:
+
+#+BEGIN_SRC http-prompt
+get /anything q==twlo page_size==100 order_by==relevance
+#+END_SRC
+
+As with headers, when you want to send the same query parameter with repeated requests, you can set parameters in the session context. They will then be automatically included with each subsequent request:
+
+#+BEGIN_SRC http-prompt
+page_size==100
+order_by==relevance
+
+get /anything q==twlo # <--- this request will include all 3 parameters
+#+END_SRC
+
+Unsurprisingly, you can delete parameters from the session context:
+
+#+BEGIN_SRC http-prompt
+rm -q order_by
+
+get /anything q==twlo # <--- this request will not include the order_by parameter
+#+END_SRC
+
+*** Post payloads
+
+By default, when sending a POST request with data, http-prompt automatically adds a Content-Type header of "application/json" and encodes the data as a JSON object. This turns out to be quite convenient, since modern web APIs tend to speak JSON.
+
+#+BEGIN_SRC http-prompt
+cd ../post
+
+post some=json
+#+END_SRC
+
+By default, all values, even numbers will be encoded as JSON string values. For example, the following sends the value as "1".
+
+#+BEGIN_SRC http-prompt
+post one=1
+#+END_SRC
+
+However, a simple syntax is provided for sending "raw" numeric, boolean, or list values:
+
+#+BEGIN_SRC http-prompt
+post one:=1
+#+END_SRC
+
+Once again, payload objects may be stored in session context to be used automatically:
+
+#+BEGIN_SRC http-prompt
+one=thing
+post other=values and=stuff
+#+END_SRC
+
+*** Getting help
+
+At any time in the prompt you can enter the "help" command, for a list of available commands and options.
+
+There are also the following resources for further information or assistance:
+
+- The documentation
+- The Discord channel
+
+** More UX goodness
+
+*** History buffer
+
+Hit the up arrow (or CTRL-U) to rifle through your previous command history.
+
+*** Autocomplete
+
+http-prompt predicts likely values for certain types of commands and arguments. When an auto-complete menu is displayed, hit <TAB> (or CTRL-N) to cycle through the options until you reach the one you like. After selecting a desired value from the auto-complete menu, just continue typing the rest of your command, or hit <Enter> to issue the command.
+
+Some auto-complete menus to check out:
+
+- Options for request verbs, e.g. get or post shows auto-complete suggestions for options such as --auth
+- Common header names and values, e.g. Content-Type, shows auto-complete suggestions for common mime types
+- Previously executed commands from the session history
+
+*** Contextual requests
+
+You've already seen how http-prompt allows you to issue commands using relative URL paths, when a base URL is set. Now we'll take that further, by changing the context's base URL with the cd command.
+
+#+BEGIN_SRC http-prompt
+cd status # < --- changes context's base url to https://httpbin.org/status
+
+get 404   # < --- issues a request to https://httpbin.org/status/404
+
+cd 500    # < --- changes context's base url to https://httpbin.org/status/500
+
+get       # < --- issues a request to https://httpbin.org/status/500
+#+END_SRC
+
+You can also use cd to change the entire base URL, including the hostname.
+
+#+BEGIN_SRC http-prompt
+cd https://api.funtranslations.com/translate
+
+get doge.json text==hello world # <--- https://api.funtranslations.com/translate/dog.json?text==helloworld
+
+cd https://www.affirmations.dev
+
+get                             # <--- https://www.affirmations.dev
+#+END_SRC
+
+*** Command pipelines
+
+Oftentimes, especially with larger response bodies, you'll need to filter the content of a response, and/or pass the response body to another application fur further processing. Just like with Unix pipelines, this can be can accomplished in http-prompt by "piping" the output to an external application of your choosing.
+
+I've found that the most useful examples typically involve filtering the response to find target elements, e.g. using jq or grep:
+
+TODO grep example
+
+Pipes can be combined to further refine the output:
+
+get https://pokeapi.co/api/v2/pokemon/1 | jq .moves[].move.name | sort
+
+Response content can also be redirected to a file descriptor, e.g. to save the content to a file:
+
+get https://pokeapi.co/api/v2/pokemon/1 > pokemon_data.json
+
+*** Save and load sessions
+
+Finally, one of my favorite features is a simple one: the http-prompt session context, including not only base URL but also any set headers, query params, authorization options, etc, can be saved to disk and reloaded at another time.
+
+This allows you to save a session context for each particular API you tend to work with, and then later you can quickly pick up session for any API without needing to again set up the URL, path, authentication, etc:
+
+## Github
+
+## Ravelry
+
+* Quick demo!
+
+That's about it!
+
+I'll quickly show you some examples of how one can use this tool to interact with real APIs.
+
+** GitHub
+
+#+BEGIN_SRC http-prompt
+source github
+
+get users/onlywade/repos sort==updated | jq .[].name
+
+cd repos/onlywade/.doom.d
+
+get pulls/1
+
+post pulls head=dired_emacs_mode base=main title="Alawys launch dired in emacs mode"
+#+END_SRC
+
+** Ravelry
+
+#+BEGIN_SRC http-prompt
+source ravelry
+
+get projects/onlywade/list.json
+
+rm *
+
+get <img_url> --download
+#+END_SRC
+
+** Work stuff
+
+*** Jira
+*** Slack
+*** Battlestar
+
+* Pause for questions
+
+** Any questions before moving on to the next exercise?
+
+* Practice time
+
+** Capture the flag (beware of doggo)
+
+https://wadeness.com/ctf/doggo
+
+Watch out! The flag is protected by a doggo.
+
+*** Reference
+
+**** Context
+
+cd https://wadeness.com/ctf/doggo
+
+get
+
+post pet
+
+**** Headers
+
+Accept:stuff
+
+**** Query params
+
+much_query==very_parameter
+
+**** JSON payload
+
+data=dog
+numbers:=[1,2,3]
+
+**** Binary data
+
+--download
+
+
+* Wrapping up
+
+** Limitations & contra-indications
+
+To be honest -- *most* of the times when I find myself needing to fire off a one-off API request or two, I reach for curl. Part of this is perhaps just muscle memory, but there are also reasons to prefer curl over http-prompt in some situations:
+
+- curl is available everywhere, and is probably already installed
+  + even in a remote server environment, for example
+- curl is pretty much universally understood
+- curl is usually more appropriate for use in a programmatic or scripting context
+
+I should also note that http-prompt is not without its limitations:
+
+- It doesn't have affordances for response assertions or tests
+- Isn't great for crafting large, multi-line payloads
+- Doesn't have first-class collaboration features
+- It isn't under very active development, has some bugs and unfinished features
+
+In general, though, any time there's an API endpoint you just want to poke around at for a while, give http-prompt a shot! You might love it.
+
+** Safety measures
+
+*** Clear history
+
+By default - and like many other terminal-based applications - http-prompt stores recent session context and history in files within your home directory. Because it's likely that your http-prompt session commands include API tokens or other secrets, you may want to delete these files when finished, or configure http-prompt to avoid storing them altogether.
+
+To delete the files on Mac OS, you can run the following command:
+
+#+BEGIN_SRC sh
+rm ~/.local/share/http-prompt/*
+#+END_SRC
+
+To find out how to disable persistent history completely, check the manual.
+
+** Further reading, next steps
+
+*** Try it out the next time you need to twiddle an API
+
+*** Check out the project page, documentation, and source code
+
+*** Learn about the underlying client library, HTTPie
+
+https://httpie.io/
+
+*** Hack on the project!
+
+**** Add support for curl format
+**** Fix bugs
+
+* Practice notes
+
+- Over time
+- Need to do speed checks?
+- Also probably pause to give students a chance to try the commands i'm showing
+- Consider cutting advanced features :( but i love them
+- jpe bug
+- need a consistent theme: food?
+- try adding space buffer around code snippets
+- don't forget to clear session history before start (and source creds)

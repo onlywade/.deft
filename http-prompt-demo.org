@@ -25,7 +25,6 @@ Http-prompt can be your friend any time you find yourself:
 - Exploring a new API
 - Troubleshooting problems with your own API
 - Running ad-hoc API requests as part of day-to-day testing, debugging, or analysis tasks
-
 Basically any time you want to set up a "tinkering workflow" involving permutations of API requests, http-prompt can help.
 
 * Installation and basic usage
@@ -58,55 +57,52 @@ $ pip install http-prompt
 
 SSH into my VM and use the pre-installed version there. :) TODO
 
+*** Time check - target 5 minutes
 
 ** Basic usage
 
-Note: for illustration purposes, I'm going to be making requests against the excellent httpbin, for starters. This API basically just echoes back whatever requests we send it, which is perfect for testing out a client.
+Note: for illustration purposes, we'll be making requests against the excellent httpbin. This API basically just echoes back whatever requests we send it, which is perfect for testing out a client.
 
-*** Launching and Request syntax
+*** Request syntax
 
-You can launch http-prompt without any arguments, and start making requests:
-
-#+BEGIN_SRC http-prompt
-$ http-prompt
-
-get https://httpbin.org/anything
-#+END_SRC
-
-Or, launch it with a base URL as an argument. Now you can make requests by specifying just the relative path:
+Launch http-prompt with a base URL as an argument. Now you can make requests by specifying just the relative path, which will be appended to the base URL:
 
 #+BEGIN_SRC http-prompt
 $ http-prompt https://httpbin.org
 
-get /anything
+get /anything     # <--- issues a GET request to https://httpbin.org/anything
 
-get /status/302
+get /status/302   # <--- issues a GET request to https://httpbin.org/status/302
+#+END_SRC
+
+We can make a POST request to the same endpoint like this:
+
+#+BEGIN_SRC http-prompt
+post /anything     # <--- issues a POST request to https://httpbin.org/anything
 #+END_SRC
 
 Cool.
 
 As you see, to make a request using a given HTTP method, you just use the appropriate method/verb (e.g. "get") followed by a URL or path.
 
-To make request using other HTTP methods, just use the corresponding verb as the command, e.g. "post", "put", or "delete". Notice how the httpbin /anything API reports back which type of request it received.
-
-There you have it - this is the core functionality of the utility.
+There you have it - this is the core functionality of the utility. But it isn't much use without being able to include _data_ with our requests. Let's check it out.
 
 *** Request headers (and introducing session context)
 
-To send an HTTP header with a request, you simply add the header name and value, separated by a colon, to your command, like so:
+To send an HTTP header with a request, you simply add the header name and value -- separated by a colon -- to your command, like so:
 
 #+BEGIN_SRC http-prompt
-get /anything Accept:food/pie
+get /anything Authorization:"Bearer super-secret-token"
 #+END_SRC
 
-Many APIs will require a certain header to be sent with *every* request, typically for authentication. Including the header "inline" with every single command can become tiresome. Http-prompt offers an affordance for this pattern in its /session context/ mechanism.
+Many APIs will require such an auth header to be sent with *every* request, and I don't want to have to type it every time. Http-prompt offers an intuitive affordance for such cases in its /session context/ mechanism.
 
-If you specify a header key/value pair -- *without actually issuing a request command along with it* -- then the header will be saved in the http-prompt session's context, and automatically sent along with every subsequent request:
+If you specify a header name and value -- *without actually issuing a request command along with it* -- then the header will be saved in the http-prompt session's context, and the header will be automatically sent along with every subsequent request:
 
 #+BEGIN_SRC http-prompt
-Authorization:"Bearer super-secret-token" # <--- this saves the header in the context
+Authorization:"Bearer super-secret-token" # <--- save the header in the context
 
-env              # <--- this command shows the current context
+env              # <--- show the current context
 
 get /anything    # <--- this request will include the Authorization header
 get /more        # <--- this request will, too
@@ -115,37 +111,51 @@ get /more        # <--- this request will, too
 When you don't want the header to be sent anymore, you can remove it from the context as follows:
 
 #+BEGIN_SRC http-prompt
-rm -h Authorization     # <--- this removes the Authorization header from the context
+rm -h Authorization     # <--- remove the Authorization header from the context
 
-env              # <--- this command shows the current context
+env              # <--- show the current context
 
 get /anything    # <--- this request will not include the Authorization header
 #+END_SRC
 
-*** Query parameters
+*** Quick recap
 
-Sending a query parameter with a request works the same was as sending a header, except that the key and value are seperated with a pair of equal signs instead of with a colon:
+We've just learned the two main ergonomic features of http-prompt:
+
+1. Specifying HTTP request data such as headers
+2. Setting request paramaters into the context to have them applied to all requests
+
+Make sure you are comfortable with these concepts before we proceed.
+
+Next, I'll show you how these two features apply to other types of request data, and then introduce some other neat tricks.
+
+* Tour of features
+** Query parameters
+
+Sending a query parameter with a request works the same was as sending a header, just with slightly variation in how the key value pair are expressed. We use a double equal sign ("==") to separate the key/value pair, rather than a colon (":").
+
+Here's an example of specifying a query parameter:
 
 #+BEGIN_SRC http-prompt
-get /anything q==twlo
+get /anything q=="soup dumplings"
 #+END_SRC
 
-Oftentimes you'll need to include more than one query parameter. This works just like you'd expect:
+Specifying multiple paramaters works just like you'd expect:
 
 #+BEGIN_SRC http-prompt
-get /anything q==twlo page_size==100 order_by==relevance
+get /anything q=="soup dumplings" page_size==100 order_by==freshness
 #+END_SRC
 
-As with headers, when you want to send the same query parameter with repeated requests, you can set parameters in the session context. They will then be automatically included with each subsequent request:
+As with headers, whenever you want to send the same query parameter with repeated requests, you can save parameters in the session context. They will then be automatically included with each subsequent request:
 
 #+BEGIN_SRC http-prompt
-page_size==100
-order_by==relevance
+page_size==100                    # <--- save page_size parameter to context
+order_by==freshness               # <--- save order_by parameter to context
 
-get /anything q==twlo # <--- this request will include all 3 parameters
+get /anything q=="soup dumplings" # <--- this request will include all 3 parameters
 #+END_SRC
 
-Unsurprisingly, you can delete parameters from the session context:
+Unsurprisingly, you can always delete unwanted parameters from the session context:
 
 #+BEGIN_SRC http-prompt
 rm -q order_by
@@ -153,36 +163,47 @@ rm -q order_by
 get /anything q==twlo # <--- this request will not include the order_by parameter
 #+END_SRC
 
-*** Post payloads
+** Post payloads
 
-By default, when sending a POST request with data, http-prompt automatically adds a Content-Type header of "application/json" and encodes the data as a JSON object. This turns out to be quite convenient, since modern web APIs tend to speak JSON.
+Http-prompt assumes that you're talking to a server that speaks JSON.
 
-#+BEGIN_SRC http-prompt
-cd ../post
+When sending a POST request with data, it automatically:
 
-post some=json
-#+END_SRC
+- Adds a Content-Type header of "application/json"
+- Encodes the data as a JSON object.
 
-By default, all values, even numbers will be encoded as JSON string values. For example, the following sends the value as "1".
-
-#+BEGIN_SRC http-prompt
-post one=1
-#+END_SRC
-
-However, a simple syntax is provided for sending "raw" numeric, boolean, or list values:
+This turns out to be quite convenient in most cases, since modern web APIs tend to speak JSON.
 
 #+BEGIN_SRC http-prompt
-post one:=1
+post /anything order=xiaolongbao filling=pork
 #+END_SRC
 
-Once again, payload objects may be stored in session context to be used automatically:
+By default, all values, even numbers will be encoded as JSON string values. For example, the following sends the count value as "12".
 
 #+BEGIN_SRC http-prompt
-one=thing
-post other=values and=stuff
+post /anything order=xiaolongbao filling=pork count=12
 #+END_SRC
 
-*** Getting help
+This isn't always what you want - some APIs require JSON values other than strings.
+
+Thus, a convenient syntax is provided for sending "raw" JSON data, including numeric, boolean, or list values, for example:
+
+#+BEGIN_SRC http-prompt
+post /anything order=xiaolongbao filling:=["pork","shrimp"] count:=12 chili_oil:=true
+#+END_SRC
+
+Finally, just like with headers and query parameters, payload data items may be stored in session context to be sent automatically:
+
+#+BEGIN_SRC http-prompt
+order=xiaolongbao
+count:=12
+chili_oil:=true
+
+post /anything filling=pork     # <--- request includes order, count, chili_oil data
+post /anything filling=shrimp   # <--- request includes order, count, chili_oil data
+#+END_SRC
+
+** Getting help
 
 At any time in the prompt you can enter the "help" command, for a list of available commands and options.
 
@@ -190,6 +211,8 @@ There are also the following resources for further information or assistance:
 
 - The documentation
 - The Discord channel
+
+** Time check - target 15 minutes
 
 ** More UX goodness
 
@@ -259,11 +282,12 @@ This allows you to save a session context for each particular API you tend to wo
 
 ## Ravelry
 
+
+*** Time check - target 20 minutes
+
 * Quick demo!
 
-That's about it!
-
-I'll quickly show you some examples of how one can use this tool to interact with real APIs.
+I'll briefly show you some examples of what it looks like to use http-prompt for interacting with a couple of real-world APIs.
 
 ** GitHub
 
@@ -286,18 +310,14 @@ source ravelry
 
 get projects/onlywade/list.json
 
-rm *
+rm *   # <--- necessary because the image download doesn't like the ...
 
 get <img_url> --download
 #+END_SRC
 
-** Work stuff
+** Time check - target 25 minutes
 
-*** Jira
-*** Slack
-*** Battlestar
-
-* Pause for questions
+* Break for questions
 
 ** Any questions before moving on to the next exercise?
 
@@ -309,33 +329,48 @@ https://wadeness.com/ctf/doggo
 
 Watch out! The flag is protected by a doggo.
 
-*** Reference
+*** Quick reference
 
-**** Context
+**** Getting started
 
-cd https://wadeness.com/ctf/doggo
+Remember you can change the base URL/path with "cd" and then make relative requests:
 
-get
+#+BEGIN_SRC http-prompt
+cd https://wadeness.com/ctf
 
-post pet
+get /doggo
+#+END_SRC
 
-**** Headers
+**** Specifying request data
 
-Accept:stuff
+***** Headers
 
-**** Query params
+#+BEGIN_SRC http-prompt
+get /path key:value      # <--- send header with a single request
+key:value                # <--- save header in context to send with all requests
+#+END_SRC
 
-much_query==very_parameter
+***** Query parameters
 
-**** JSON payload
+#+BEGIN_SRC http-prompt
+key==value               # <--- send param with a single request
+get /path key==value     # <--- save param in context to send with all requests
+#+END_SRC
 
-data=dog
-numbers:=[1,2,3]
+***** JSON payloads
 
-**** Binary data
+#+BEGIN_SRC http-prompt
+post /path key=value     # <--- send payload value as string
+post /path key:=value    # <--- send payload value as raw JSON type
+#+END_SRC
 
---download
+**** Binary content
 
+***** File download
+
+#+BEGIN_SRC http-prompt
+--download    # <--- append this to a request to save content as file
+#+END_SRC
 
 * Wrapping up
 
@@ -388,11 +423,10 @@ https://httpie.io/
 
 * Practice notes
 
-- Over time
-- Need to do speed checks?
 - Also probably pause to give students a chance to try the commands i'm showing
-- Consider cutting advanced features :( but i love them
-- jpe bug
 - need a consistent theme: food?
 - try adding space buffer around code snippets
 - don't forget to clear session history before start (and source creds)
+- and open up https://docs.github.com/en/rest/reference/repos in browser
+- maybe ravelry, too
+- embiggen terminal font size

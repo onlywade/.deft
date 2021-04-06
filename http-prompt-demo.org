@@ -25,6 +25,7 @@ Http-prompt can be your friend any time you find yourself:
 - Exploring a new API
 - Troubleshooting problems with your own API
 - Running ad-hoc API requests as part of day-to-day testing, debugging, or analysis tasks
+
 Basically any time you want to set up a "tinkering workflow" involving permutations of API requests, http-prompt can help.
 
 * Installation and basic usage
@@ -55,13 +56,19 @@ $ pip install http-prompt
 
 *** If all else fails
 
-SSH into my VM and use the pre-installed version there. :) TODO
+Yout can ssh into my ec2 instance and use the pre-installed version there. :)
+
+#+BEGIN_SRC shell
+ssh guest-x@backup.junkyard.digital -p 2222
+#+END_SRC
+
+Ask me for a username and password.
 
 *** Time check - target 5 minutes
 
 ** Basic usage
 
-Note: for illustration purposes, we'll be making requests against the excellent httpbin. This API basically just echoes back whatever requests we send it, which is perfect for testing out a client.
+Note: for illustration purposes, we'll be making requests against httpbin. This excellent API basically just echoes back whatever requests we send it, which is perfect for testing out a client.
 
 *** Request syntax
 
@@ -70,12 +77,12 @@ Launch http-prompt with a base URL as an argument. Now you can make requests by 
 #+BEGIN_SRC http-prompt
 $ http-prompt https://httpbin.org
 
-get /anything     # <--- issues a GET request to https://httpbin.org/anything
+get /anything        # <--- issues a GET request to https://httpbin.org/anything
 
-get /status/302   # <--- issues a GET request to https://httpbin.org/status/302
+get /anything/else   # <--- issues a GET request to https://httpbin.org/anything/else
 #+END_SRC
 
-We can make a POST request to the same endpoint like this:
+We can make a POST request, like this:
 
 #+BEGIN_SRC http-prompt
 post /anything     # <--- issues a POST request to https://httpbin.org/anything
@@ -92,7 +99,7 @@ There you have it - this is the core functionality of the utility. But it isn't 
 To send an HTTP header with a request, you simply add the header name and value -- separated by a colon -- to your command, like so:
 
 #+BEGIN_SRC http-prompt
-get /anything Authorization:"Bearer super-secret-token"
+get /anything Authorization:secret-api-key
 #+END_SRC
 
 Many APIs will require such an auth header to be sent with *every* request, and I don't want to have to type it every time. Http-prompt offers an intuitive affordance for such cases in its /session context/ mechanism.
@@ -100,12 +107,12 @@ Many APIs will require such an auth header to be sent with *every* request, and 
 If you specify a header name and value -- *without actually issuing a request command along with it* -- then the header will be saved in the http-prompt session's context, and the header will be automatically sent along with every subsequent request:
 
 #+BEGIN_SRC http-prompt
-Authorization:"Bearer super-secret-token" # <--- save the header in the context
+Authorization:secret-api-key # <--- save the header in the context
 
-env              # <--- show the current context
+env                          # <--- show the current context
 
-get /anything    # <--- this request will include the Authorization header
-get /more        # <--- this request will, too
+get /anything                # <--- this request will include the Authorization header
+get /anything/else           # <--- this request will, too
 #+END_SRC
 
 When you don't want the header to be sent anymore, you can remove it from the context as follows:
@@ -113,46 +120,49 @@ When you don't want the header to be sent anymore, you can remove it from the co
 #+BEGIN_SRC http-prompt
 rm -h Authorization     # <--- remove the Authorization header from the context
 
-env              # <--- show the current context
+env                     # <--- show the current context
 
-get /anything    # <--- this request will not include the Authorization header
+get /anything           # <--- this request will not include the Authorization header
 #+END_SRC
 
 *** Quick recap
 
-We've just learned the two main ergonomic features of http-prompt:
+We've just learned two important ergonomic features of http-prompt:
 
-1. Specifying HTTP request data such as headers
-2. Setting request paramaters into the context to have them applied to all requests
+1. Easily specifying HTTP request data, such as headers
+2. Saving request paramaters into the context to have them applied to all requests
 
 Make sure you are comfortable with these concepts before we proceed.
 
 Next, I'll show you how these two features apply to other types of request data, and then introduce some other neat tricks.
 
+*** Time check - target 10 minutes
+
 * Tour of features
 ** Query parameters
 
-Sending a query parameter with a request works the same was as sending a header, just with slightly variation in how the key value pair are expressed. We use a double equal sign ("==") to separate the key/value pair, rather than a colon (":").
+Sending a query parameter with a request works the same was as sending a header, only with slightly variation in how the key value pair are expressed. We use a double equal sign ("==") to separate the key/value pair, rather than a colon (":").
 
-Here's an example of specifying a query parameter:
+Here's an example of specifying a query parameter with a request:
 
 #+BEGIN_SRC http-prompt
-get /anything q=="soup dumplings"
+get /anything q==dumplings
 #+END_SRC
 
 Specifying multiple paramaters works just like you'd expect:
 
 #+BEGIN_SRC http-prompt
-get /anything q=="soup dumplings" page_size==100 order_by==freshness
+get /anything q==dumplings page_size==100 order_by==filling
 #+END_SRC
 
 As with headers, whenever you want to send the same query parameter with repeated requests, you can save parameters in the session context. They will then be automatically included with each subsequent request:
 
 #+BEGIN_SRC http-prompt
 page_size==100                    # <--- save page_size parameter to context
-order_by==freshness               # <--- save order_by parameter to context
+order_by==filling                 # <--- save order_by parameter to context
 
-get /anything q=="soup dumplings" # <--- this request will include all 3 parameters
+get /anything q==dumplings        # <--- this request will include all 3 parameters
+get /anything q==meatballs        # <--- this request, too
 #+END_SRC
 
 Unsurprisingly, you can always delete unwanted parameters from the session context:
@@ -160,7 +170,7 @@ Unsurprisingly, you can always delete unwanted parameters from the session conte
 #+BEGIN_SRC http-prompt
 rm -q order_by
 
-get /anything q==twlo # <--- this request will not include the order_by parameter
+get /anything q==meatballs        # <--- this request will not include the order_by parameter
 #+END_SRC
 
 ** Post payloads
@@ -187,6 +197,14 @@ post /anything order=xiaolongbao filling=pork count=12
 This isn't always what you want - some APIs require JSON values other than strings.
 
 Thus, a convenient syntax is provided for sending "raw" JSON data, including numeric, boolean, or list values, for example:
+
+#+BEGIN_SRC http-prompt
+post /anything order=xiaolongbao filling:=pork count:=12
+#+END_SRC
+
+Note that this time, the count value was sent as an integer type.
+
+More types:
 
 #+BEGIN_SRC http-prompt
 post /anything order=xiaolongbao filling:=["pork","shrimp"] count:=12 chili_oil:=true
@@ -242,6 +260,10 @@ get 404   # < --- issues a request to https://httpbin.org/status/404
 cd 500    # < --- changes context's base url to https://httpbin.org/status/500
 
 get       # < --- issues a request to https://httpbin.org/status/500
+
+cd ../302 # < --- changes context's base url back to https://httpbin.org/302
+
+get       # < --- issues a request to https://httpbin.org/status/302
 #+END_SRC
 
 You can also use cd to change the entire base URL, including the hostname.
@@ -260,30 +282,27 @@ get                             # <--- https://www.affirmations.dev
 
 Oftentimes, especially with larger response bodies, you'll need to filter the content of a response, and/or pass the response body to another application fur further processing. Just like with Unix pipelines, this can be can accomplished in http-prompt by "piping" the output to an external application of your choosing.
 
-I've found that the most useful examples typically involve filtering the response to find target elements, e.g. using jq or grep:
+I've found that the most useful examples typically involve filtering the response to find target elements, for example using jq or grep.
 
-TODO grep example
+Multiple commands can be combined to further refine the output:
 
-Pipes can be combined to further refine the output:
+#+BEGIN_SRC http-prompt
+cd https://pokeapi.co/api/v2
 
-get https://pokeapi.co/api/v2/pokemon/1 | jq .moves[].move.name | sort
+get /pokemon | jq | grep -C2 caterpie
 
-Response content can also be redirected to a file descriptor, e.g. to save the content to a file:
+get /pokemon/10
 
-get https://pokeapi.co/api/v2/pokemon/1 > pokemon_data.json
+get /pokemon/10 | jq .moves[].move.name | sort
+#+END_SRC
 
 *** Save and load sessions
 
 Finally, one of my favorite features is a simple one: the http-prompt session context, including not only base URL but also any set headers, query params, authorization options, etc, can be saved to disk and reloaded at another time.
 
-This allows you to save a session context for each particular API you tend to work with, and then later you can quickly pick up session for any API without needing to again set up the URL, path, authentication, etc:
+This allows you to save a session context for each particular API you tend to work with, and then later you can quickly pick up session for any API without needing to again set up the URL, path, authentication, etc... I'll demonstrate this feature in a moment.
 
-## Github
-
-## Ravelry
-
-
-*** Time check - target 20 minutes
+*** Time check - target 20 minutes. whew.
 
 * Quick demo!
 
@@ -319,15 +338,17 @@ get <img_url> --download
 
 * Break for questions
 
-** Any questions before moving on to the next exercise?
-
 * Practice time
 
-** Capture the flag (beware of doggo)
+** Capture the flag
 
-https://wadeness.com/ctf/doggo
+This type of activity is an infosec tradition designed to exercise cybersecurity and problem-solving skills. The objective is to complete a series of tasks (usually of increasing difficulty), eventually leading to acquisition of a password, file, or other piece of information (i.e. the "flag").
 
-Watch out! The flag is protected by a doggo.
+In this case I've tailored the tasks to focus on API exploration in order to exercise self-directed HTTP client usage.
+
+Also, the target challenge level is LOW. But watch out! The flag is protected by a guard dog.
+
+Start by approaching the dog with a GET request to https://junkyard.digital/doggo.
 
 *** Quick reference
 
@@ -369,7 +390,7 @@ post /path key:=value    # <--- send payload value as raw JSON type
 ***** File download
 
 #+BEGIN_SRC http-prompt
---download    # <--- append this to a request to save content as file
+--download               # <--- append this to a request to save content as file
 #+END_SRC
 
 * Wrapping up
@@ -427,6 +448,7 @@ https://httpie.io/
 - need a consistent theme: food?
 - try adding space buffer around code snippets
 - don't forget to clear session history before start (and source creds)
-- and open up https://docs.github.com/en/rest/reference/repos in browser
-- maybe ravelry, too
+- and open up https://docs.github.com/en/rest/reference/pulls#create-a-pull-request in browser
+- maybe ravelry docs, too: https://www.ravelry.com/api#projects_list
+- and httpbin: http://httpbin.org/#/Anything
 - embiggen terminal font size

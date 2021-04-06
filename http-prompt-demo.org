@@ -1,10 +1,10 @@
-#+TITLE: http-prompt: a crash course
+#+TITLE: HTTP Prompt: a crash course
 
 * Intro
 
 ** What even /is/ it?
 
-*Http-prompt is an interactive terminal application for issuing hand-crafted HTTP requests.*
+*HTTP Prompt is an interactive terminal application for issuing hand-crafted HTTP requests.*
 
 I like to think of it as a simplified, terminal-based friend of Postman (or, a more personable relative of curl!).
 
@@ -16,23 +16,23 @@ It offers exquisite creature comforts for shell-dwellers!
 
 HTTP is a textual protocol. Some find it more natural to interact with it through a text-first interface, rather than via a GUI.
 
-While there are some other terminal-based HTTP clients, http-prompt is in a league of its own. The key differentiator, as you'll see, is that http-prompt is both *interactive* and *contextual*. These attributes lead to useful features, and a marked improvement in overall ergonomics.
+While there are some other terminal-based HTTP clients, HTTP Prompt is in a league of its own. The key differentiator, as you'll see, is that HTTP Prompt is both *interactive* and *contextual*. These attributes lead to useful features, and a marked improvement in overall ergonomics.
 
 ** How might it be useful to me?
 
-Http-prompt can be your friend any time you find yourself:
+HTTP Prompt can be your friend any time you find yourself:
 
 - Exploring a new API
 - Troubleshooting problems with your own API
 - Running ad-hoc API requests as part of day-to-day testing, debugging, or analysis tasks
 
-Basically any time you want to set up a "tinkering workflow" involving permutations of API requests, http-prompt can help.
+Basically any time you want to set up a "tinkering workflow" involving permutations of API requests, HTTP Prompt can help.
 
 * Installation and basic usage
 
 ** Installation
 
-Http-prompt is a Python application with only a few simple dependencies. The latest version only supports Python 3, so if you're on an older Python version, be sure to install http-prompt 1.0.0 for Python 2 compatibility.
+HTTP Prompt is a Python application with only a few simple dependencies. The latest version only supports Python 3, so if you're on an older Python version, be sure to install the *1.0.0* version of the package for Python 2 compatibility.
 
 *** Checking which Python version you have
 
@@ -72,7 +72,7 @@ Note: for illustration purposes, we'll be making requests against httpbin. This 
 
 *** Request syntax
 
-Launch http-prompt with a base URL as an argument. Now you can make requests by specifying just the relative path, which will be appended to the base URL:
+Start the app by running the http-prompt command, with a base URL as an argument. Now you can make requests by specifying just the relative path, which will be appended to the base URL:
 
 #+BEGIN_SRC http-prompt
 $ http-prompt https://httpbin.org
@@ -102,9 +102,9 @@ To send an HTTP header with a request, you simply add the header name and value 
 get /anything Authorization:secret-api-key
 #+END_SRC
 
-Many APIs will require such an auth header to be sent with *every* request, and I don't want to have to type it every time. Http-prompt offers an intuitive affordance for such cases in its /session context/ mechanism.
+Many APIs will require such an auth header to be sent with *every* request, and I don't want to have to type it every time. HTTP Prompt offers an intuitive affordance for such cases in its /session context/ mechanism.
 
-If you specify a header name and value -- *without actually issuing a request command along with it* -- then the header will be saved in the http-prompt session's context, and the header will be automatically sent along with every subsequent request:
+If you specify a header name and value -- *without actually issuing a request command along with it* -- then the header will be saved in the HTTP Prompt session's context, and the header will be automatically sent along with every subsequent request:
 
 #+BEGIN_SRC http-prompt
 Authorization:secret-api-key # <--- save the header in the context
@@ -127,7 +127,7 @@ get /anything           # <--- this request will not include the Authorization h
 
 *** Quick recap
 
-We've just learned two important ergonomic features of http-prompt:
+We've just learned two important ergonomic features of HTTP Prompt:
 
 1. Easily specifying HTTP request data, such as headers
 2. Saving request paramaters into the context to have them applied to all requests
@@ -175,7 +175,7 @@ get /anything q==meatballs        # <--- this request will not include the order
 
 ** Post payloads
 
-Http-prompt assumes that you're talking to a server that speaks JSON.
+HTTP Prompt assumes that you're talking to a server that speaks JSON.
 
 When sending a POST request with data, it automatically:
 
@@ -240,7 +240,7 @@ Hit the up arrow (or CTRL-U) to rifle through your previous command history.
 
 *** Autocomplete
 
-http-prompt predicts likely values for certain types of commands and arguments. When an auto-complete menu is displayed, hit <TAB> (or CTRL-N) to cycle through the options until you reach the one you like. After selecting a desired value from the auto-complete menu, just continue typing the rest of your command, or hit <Enter> to issue the command.
+HTTP Prompt predicts likely values for certain types of commands and arguments. When an auto-complete menu is displayed, hit <TAB> (or CTRL-N) to cycle through the options until you reach the one you like. After selecting a desired value from the auto-complete menu, just continue typing the rest of your command, or hit <Enter> to issue the command.
 
 Some auto-complete menus to check out:
 
@@ -250,7 +250,7 @@ Some auto-complete menus to check out:
 
 *** Contextual requests
 
-You've already seen how http-prompt allows you to issue commands using relative URL paths, when a base URL is set. Now we'll take that further, by changing the context's base URL with the cd command.
+You've already seen how HTTP Prompt allows you to issue commands using relative URL paths, when a base URL is set. Now we'll take that further, by changing the context's base URL with the cd command.
 
 #+BEGIN_SRC http-prompt
 cd status # < --- changes context's base url to https://httpbin.org/status
@@ -280,7 +280,7 @@ get                             # <--- https://www.affirmations.dev
 
 *** Command pipelines
 
-Oftentimes, especially with larger response bodies, you'll need to filter the content of a response, and/or pass the response body to another application fur further processing. Just like with Unix pipelines, this can be can accomplished in http-prompt by "piping" the output to an external application of your choosing.
+Oftentimes, especially with larger response bodies, you'll need to filter the content of a response, and/or pass the response body to another application fur further processing. Just like with Unix pipelines, this can be can accomplished in HTTP Prompt by "piping" the output to an external application of your choosing.
 
 I've found that the most useful examples typically involve filtering the response to find target elements, for example using jq or grep.
 
@@ -298,7 +298,7 @@ get /pokemon/10 | jq .moves[].move.name | sort
 
 *** Save and load sessions
 
-Finally, one of my favorite features is a simple one: the http-prompt session context, including not only base URL but also any set headers, query params, authorization options, etc, can be saved to disk and reloaded at another time.
+Finally, one of my favorite features is a simple one: the HTTP Prompt session context, including not only base URL but also any set headers, query params, authorization options, etc, can be saved to disk and reloaded at another time.
 
 This allows you to save a session context for each particular API you tend to work with, and then later you can quickly pick up session for any API without needing to again set up the URL, path, authentication, etc... I'll demonstrate this feature in a moment.
 
@@ -306,7 +306,7 @@ This allows you to save a session context for each particular API you tend to wo
 
 * Quick demo!
 
-I'll briefly show you some examples of what it looks like to use http-prompt for interacting with a couple of real-world APIs.
+I'll briefly show you some examples of what it looks like to use HTTP Prompt for interacting with a couple of real-world APIs.
 
 ** GitHub
 
@@ -397,27 +397,27 @@ post /path key:=value    # <--- send payload value as raw JSON type
 
 ** Limitations & contra-indications
 
-To be honest -- *most* of the times when I find myself needing to fire off a one-off API request or two, I reach for curl. Part of this is perhaps just muscle memory, but there are also reasons to prefer curl over http-prompt in some situations:
+To be honest -- *most* of the times when I find myself needing to fire off a one-off API request or two, I reach for curl. Part of this is perhaps just muscle memory, but there are also reasons to prefer curl over HTTP Prompt in some situations:
 
 - curl is available everywhere, and is probably already installed
   + even in a remote server environment, for example
 - curl is pretty much universally understood
 - curl is usually more appropriate for use in a programmatic or scripting context
 
-I should also note that http-prompt is not without its limitations:
+I should also note that HTTP Prompt is not without its limitations:
 
 - It doesn't have affordances for response assertions or tests
 - Isn't great for crafting large, multi-line payloads
 - Doesn't have first-class collaboration features
 - It isn't under very active development, has some bugs and unfinished features
 
-In general, though, any time there's an API endpoint you just want to poke around at for a while, give http-prompt a shot! You might love it.
+In general, though, any time there's an API endpoint you just want to poke around at for a while, give HTTP Prompt a shot! You might love it.
 
 ** Safety measures
 
 *** Clear history
 
-By default - and like many other terminal-based applications - http-prompt stores recent session context and history in files within your home directory. Because it's likely that your http-prompt session commands include API tokens or other secrets, you may want to delete these files when finished, or configure http-prompt to avoid storing them altogether.
+By default - and like many other terminal-based applications - HTTP Prompt stores recent session context and history in files within your home directory. Because it's likely that your HTTP Prompt session commands include API tokens or other secrets, you may want to delete these files when finished, or configure HTTP Prompt to avoid storing them altogether.
 
 To delete the files on Mac OS, you can run the following command:
 

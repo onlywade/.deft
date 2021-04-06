@@ -8,15 +8,15 @@
 
 I like to think of it as a simplified, terminal-based friend of Postman (or, a more personable relative of curl!).
 
-Its delicious syntax is based on HTTPie, a popular and much more cleverly named Python library.
+Its delicious syntax is based on HTTPie, a popular, and more cleverly named Python library.
 
-** Okay but Why?
+** Okay, but Why?
 
 It offers exquisite creature comforts for shell-dwellers!
 
 HTTP is a textual protocol. Some find it more natural to interact with it through a text-first interface, rather than via a GUI.
 
-While there are some other terminal-based HTTP clients, HTTP Prompt is in a league of its own. The key differentiator, as you'll see, is that HTTP Prompt is both *interactive* and *contextual*. These attributes lead to useful features, and a marked improvement in overall ergonomics.
+While there are some other terminal-based HTTP clients, HTTP Prompt is in a league of its own. The key differentiator, as you'll see, is that HTTP Prompt is both *interactive* and *contextual*. These attributes lead to useful features, and a marked improvement in overall usability and ergonomics.
 
 ** How might it be useful to me?
 
@@ -45,13 +45,13 @@ python --version
 *** For Python 2
 
 #+BEGIN_SRC shell
-$ pip install http-prompt==1.0.0
+pip install http-prompt==1.0.0
 #+END_SRC
 
 *** For Python 3
 
 #+BEGIN_SRC shell
-$ pip install http-prompt
+pip install http-prompt
 #+END_SRC
 
 *** If all else fails
@@ -104,6 +104,8 @@ get /anything Authorization:secret-api-key
 
 Many APIs will require such an auth header to be sent with *every* request, and I don't want to have to type it every time. HTTP Prompt offers an intuitive affordance for such cases in its /session context/ mechanism.
 
+Session context is a way to store data which will be sent with every request.
+
 If you specify a header name and value -- *without actually issuing a request command along with it* -- then the header will be saved in the HTTP Prompt session's context, and the header will be automatically sent along with every subsequent request:
 
 #+BEGIN_SRC http-prompt
@@ -130,7 +132,7 @@ get /anything           # <--- this request will not include the Authorization h
 We've just learned two important ergonomic features of HTTP Prompt:
 
 1. Easily specifying HTTP request data, such as headers
-2. Saving request paramaters into the context to have them applied to all requests
+2. Saving request paramaters into the context to have them applied to all future requests
 
 Make sure you are comfortable with these concepts before we proceed.
 
@@ -289,11 +291,11 @@ Multiple commands can be combined to further refine the output:
 #+BEGIN_SRC http-prompt
 cd https://pokeapi.co/api/v2
 
-get /pokemon | jq | grep -C2 caterpie
+get pokemon | jq | grep -C2 caterpie
 
-get /pokemon/10
+get pokemon/10
 
-get /pokemon/10 | jq .moves[].move.name | sort
+get pokemon/10 | jq .moves[].move.name | sort
 #+END_SRC
 
 *** Save and load sessions
@@ -304,11 +306,26 @@ This allows you to save a session context for each particular API you tend to wo
 
 *** Time check - target 20 minutes. whew.
 
-* Quick demo!
+* Putting it all together
 
-I'll briefly show you some examples of what it looks like to use HTTP Prompt for interacting with a couple of real-world APIs.
+** A final recap
 
-** GitHub
+The main topics we've learned about:
+
+- Making requests with data
+  + Headers
+  + Query parameters
+  + JSON payload
+- Saving things in the session context for re-use
+  + Base URL and path
+  + Request data to be included with all requests
+- Filtering response data by piping it to shell programs
+
+Now I'll briefly show you a couple of examples where I use these features for interacting with a real-world APIs.
+
+** Demo 1: GitHub
+
+https://docs.github.com/en/rest/reference/pulls#create-a-pull-request
 
 #+BEGIN_SRC http-prompt
 source github
@@ -322,7 +339,9 @@ get pulls/1
 post pulls head=dired_emacs_mode base=main title="Alawys launch dired in emacs mode"
 #+END_SRC
 
-** Ravelry
+** Demo 2: Ravelry
+
+https://www.ravelry.com/api#projects_list
 
 #+BEGIN_SRC http-prompt
 source ravelry

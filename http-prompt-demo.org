@@ -1,8 +1,28 @@
-#+TITLE: HTTP Prompt: a crash course
+#+TITLE: Workshop: HTTP Prompt
 
 * Intro
 
-** What even /is/ it?
+** Who are you?
+
+Hi, I'm wade.
+
+- 5+ years at Twilio
+  + Software engineer on various Platform Engineering teams
+- Passionate builder and teacher
+  + I love enabling developers to do cool things with our platform
+  + Looking to focus my carreer more directly on education
+- Collector of hobbies
+  + Board gaming
+  + Bicycling
+  + Beer brewing
+  + Hang gliding
+  + Knitting
+  + Sewing
+  + Meat smoking
+  + Language learning
+  + Tech tinkering
+
+** What is the HTTP Prompt thing?
 
 *HTTP Prompt is an interactive terminal application for issuing hand-crafted HTTP requests.*
 
@@ -28,6 +48,13 @@ HTTP Prompt can be your friend any time you find yourself:
 
 Basically any time you want to set up a "tinkering workflow" involving permutations of API requests, HTTP Prompt can help.
 
+** What it's not for
+
+HTTP Prompt is an excellent interface for an inquisitive *human*. It is not designed for programmatic consumption.
+
+- Scripting
+- Collaboration
+
 * Installation and basic usage
 
 ** Installation
@@ -39,19 +66,19 @@ HTTP Prompt is a Python application with only a few simple dependencies. The lat
 If you're not sure which Python version you have installed, run this command to find out:
 
 #+BEGIN_SRC shell
-python --version
+> python --version
 #+END_SRC shell
 
 *** For Python 2
 
 #+BEGIN_SRC shell
-pip install http-prompt==1.0.0
+> pip install http-prompt==1.0.0
 #+END_SRC
 
 *** For Python 3
 
 #+BEGIN_SRC shell
-pip install http-prompt
+> pip install http-prompt
 #+END_SRC
 
 *** If all else fails
@@ -70,12 +97,14 @@ Ask me for a username and password.
 
 Note: for illustration purposes, we'll be making requests against httpbin. This excellent API basically just echoes back whatever requests we send it, which is perfect for testing out a client.
 
+http://httpbin.org/#/Anything
+
 *** Request syntax
 
 Start the app by running the http-prompt command, with a base URL as an argument. Now you can make requests by specifying just the relative path, which will be appended to the base URL:
 
 #+BEGIN_SRC http-prompt
-$ http-prompt https://httpbin.org
+> http-prompt https://httpbin.org
 
 get /anything        # <--- issues a GET request to https://httpbin.org/anything
 
@@ -95,6 +124,8 @@ As you see, to make a request using a given HTTP method, you just use the approp
 There you have it - this is the core functionality of the utility. But it isn't much use without being able to include _data_ with our requests. Let's check it out.
 
 *** Request headers (and introducing session context)
+
+_Please put away for terminal for the time being. We'll need it again later!_
 
 To send an HTTP header with a request, you simply add the header name and value -- separated by a colon -- to your command, like so:
 
@@ -129,10 +160,10 @@ get /anything           # <--- this request will not include the Authorization h
 
 *** Quick recap
 
-We've just learned two important ergonomic features of HTTP Prompt:
+So far we've just learned the two most important ergonomic concepts of HTTP Prompt:
 
 1. Easily specifying HTTP request data, such as headers
-2. Saving request paramaters into the context to have them applied to all future requests
+2. Saving request parameters into the context to have them applied to all future requests
 
 Make sure you are comfortable with these concepts before we proceed.
 
@@ -140,7 +171,7 @@ Next, I'll show you how these two features apply to other types of request data,
 
 *** Time check - target 10 minutes
 
-* Tour of features
+* Feature presentation
 ** Query parameters
 
 Sending a query parameter with a request works the same was as sending a header, only with slightly variation in how the key value pair are expressed. We use a double equal sign ("==") to separate the key/value pair, rather than a colon (":").
@@ -164,7 +195,7 @@ page_size==100                    # <--- save page_size parameter to context
 order_by==filling                 # <--- save order_by parameter to context
 
 get /anything q==dumplings        # <--- this request will include all 3 parameters
-get /anything q==meatballs        # <--- this request, too
+get /anything q=="hot pockets"    # <--- this request, too
 #+END_SRC
 
 Unsurprisingly, you can always delete unwanted parameters from the session context:
@@ -249,10 +280,13 @@ Some auto-complete menus to check out:
 - Options for request verbs, e.g. get or post shows auto-complete suggestions for options such as --auth
 - Common header names and values, e.g. Content-Type, shows auto-complete suggestions for common mime types
 - Previously executed commands from the session history
+- API endpoints from an OpenAPI spec
 
 *** Contextual requests
 
 You've already seen how HTTP Prompt allows you to issue commands using relative URL paths, when a base URL is set. Now we'll take that further, by changing the context's base URL with the cd command.
+
+http://httpbin.org/#/Status_codes
 
 #+BEGIN_SRC http-prompt
 cd status # < --- changes context's base url to https://httpbin.org/status
@@ -273,11 +307,11 @@ You can also use cd to change the entire base URL, including the hostname.
 #+BEGIN_SRC http-prompt
 cd https://api.funtranslations.com/translate
 
-get doge.json text==hello world # <--- https://api.funtranslations.com/translate/dog.json?text==helloworld
+get doge.json text==helloworld
 
 cd https://www.affirmations.dev
 
-get                             # <--- https://www.affirmations.dev
+get
 #+END_SRC
 
 *** Command pipelines
@@ -290,6 +324,8 @@ Multiple commands can be combined to further refine the output:
 
 #+BEGIN_SRC http-prompt
 cd https://pokeapi.co/api/v2
+
+limit==100
 
 get pokemon | jq | grep -C2 caterpie
 
@@ -304,7 +340,7 @@ Finally, one of my favorite features is a simple one: the HTTP Prompt session co
 
 This allows you to save a session context for each particular API you tend to work with, and then later you can quickly pick up session for any API without needing to again set up the URL, path, authentication, etc... I'll demonstrate this feature in a moment.
 
-*** Time check - target 20 minutes. whew.
+*** Time check - target 20 minutes. Whew.
 
 * Putting it all together
 
@@ -315,15 +351,20 @@ The main topics we've learned about:
 - Making requests with data
   + Headers
   + Query parameters
-  + JSON payload
+  + JSON payloads
 - Saving things in the session context for re-use
   + Base URL and path
   + Request data to be included with all requests
 - Filtering response data by piping it to shell programs
+- Using command history and auto-complete
+
+There are a slew of other features that I'm leaving out, for brevity, but these are the ones I mostly use.
 
 Now I'll briefly show you a couple of examples where I use these features for interacting with a real-world APIs.
 
 ** Demo 1: GitHub
+
+https://docs.github.com/en/rest/reference/repos#list-repositories-for-the-authenticated-user
 
 https://docs.github.com/en/rest/reference/pulls#create-a-pull-request
 
@@ -348,8 +389,6 @@ source ravelry
 
 get projects/onlywade/list.json
 
-rm *   # <--- necessary because the image download doesn't like the ...
-
 get <img_url> --download
 #+END_SRC
 
@@ -357,26 +396,30 @@ get <img_url> --download
 
 * Break for questions
 
-* Practice time
+* Practice time!
 
 ** Capture the flag
 
-This type of activity is an infosec tradition designed to exercise cybersecurity and problem-solving skills. The objective is to complete a series of tasks (usually of increasing difficulty), eventually leading to acquisition of a password, file, or other piece of information (i.e. the "flag").
+This type of activity is an infosec tradition designed to exercise cybersecurity and problem-solving skills. The objective is to complete a series of tasks (usually of increasing difficulty), eventually leading to acquisition of a password, file, or other piece of protected information (i.e. the "flag").
 
-In this case I've tailored the tasks to focus on API exploration in order to exercise self-directed HTTP client usage.
+In this case I've tailored the tasks to focus on API exploration in order to exercise human-driven HTTP client usage.
 
 Also, the target challenge level is LOW. But watch out! The flag is protected by a guard dog.
 
-Start by approaching the dog with a GET request to https://junkyard.digital/doggo.
+Start by approaching the creature with a GET request to https://junkyard.digital/doggo.
 
 *** Quick reference
 
-**** Getting started
+**** Project docs
+
+https://docs.http-prompt.com
+
+**** Getting started on capture the flag
 
 Remember you can change the base URL/path with "cd" and then make relative requests:
 
 #+BEGIN_SRC http-prompt
-cd https://wadeness.com/ctf
+cd https://junkyard.digital.com
 
 get /doggo
 #+END_SRC
@@ -387,14 +430,14 @@ get /doggo
 
 #+BEGIN_SRC http-prompt
 get /path key:value      # <--- send header with a single request
-key:value                # <--- save header in context to send with all requests
-#+END_SRC
+key:value                # <--- save header in context to send with all #+END_SRC
 
 ***** Query parameters
 
 #+BEGIN_SRC http-prompt
 key==value               # <--- send param with a single request
-get /path key==value     # <--- save param in context to send with all requests
+get /path key==value     # <--- save param in context to send with all
+get /path key=="a b c"   # <--- use quotes for specifying strings with spaces
 #+END_SRC
 
 ***** JSON payloads
@@ -404,12 +447,18 @@ post /path key=value     # <--- send payload value as string
 post /path key:=value    # <--- send payload value as raw JSON type
 #+END_SRC
 
-**** Binary content
+**** Request options
 
-***** File download
+***** Basic Auth
 
 #+BEGIN_SRC http-prompt
---download               # <--- append this to a request to save content as file
+--auth username:password # <--- send basic auth credentials with request
+#+END_SRC
+
+***** File download for binary content
+
+#+BEGIN_SRC http-prompt
+--download               # <--- download the response content as a file
 #+END_SRC
 
 * Wrapping up
@@ -460,14 +509,4 @@ https://httpie.io/
 
 **** Add support for curl format
 **** Fix bugs
-
-* Practice notes
-
-- Also probably pause to give students a chance to try the commands i'm showing
-- need a consistent theme: food?
-- try adding space buffer around code snippets
-- don't forget to clear session history before start (and source creds)
-- and open up https://docs.github.com/en/rest/reference/pulls#create-a-pull-request in browser
-- maybe ravelry docs, too: https://www.ravelry.com/api#projects_list
-- and httpbin: http://httpbin.org/#/Anything
-- embiggen terminal font size
+** Q&A

@@ -12,6 +12,7 @@ Hi, I'm wade.
   + I love enabling developers to do cool things with our platform
   + Looking to focus my carreer more directly on education
 - Collector of hobbies
+  + Tech tinkering
   + Board gaming
   + Bicycling
   + Beer brewing
@@ -20,7 +21,8 @@ Hi, I'm wade.
   + Sewing
   + Meat smoking
   + Language learning
-  + Tech tinkering
+  + Speed cubing
+  + Bread baking
 
 ** What is the HTTP Prompt thing?
 
@@ -52,7 +54,7 @@ Basically any time you want to set up a "tinkering workflow" involving permutati
 
 HTTP Prompt is an excellent interface for an inquisitive *human*. It is not designed for programmatic consumption.
 
-- Scripting
+- Scripting, automation
 - Collaboration
 
 * Installation and basic usage
@@ -60,6 +62,8 @@ HTTP Prompt is an excellent interface for an inquisitive *human*. It is not desi
 ** Installation
 
 HTTP Prompt is a Python application with only a few simple dependencies. The latest version only supports Python 3, so if you're on an older Python version, be sure to install the *1.0.0* version of the package for Python 2 compatibility.
+
+Obligatory joke: https://xkcd.com/1987/
 
 *** Checking which Python version you have
 
@@ -171,7 +175,7 @@ Next, I'll show you how these two features apply to other types of request data,
 
 *** Time check - target 10 minutes
 
-* Feature presentation
+* Key features
 ** Query parameters
 
 Sending a query parameter with a request works the same was as sending a header, only with slightly variation in how the key value pair are expressed. We use a double equal sign ("==") to separate the key/value pair, rather than a colon (":").
@@ -254,15 +258,6 @@ post /anything filling=pork     # <--- request includes order, count, chili_oil 
 post /anything filling=shrimp   # <--- request includes order, count, chili_oil data
 #+END_SRC
 
-** Getting help
-
-At any time in the prompt you can enter the "help" command, for a list of available commands and options.
-
-There are also the following resources for further information or assistance:
-
-- The documentation
-- The Discord channel
-
 ** Time check - target 15 minutes
 
 ** More UX goodness
@@ -307,7 +302,7 @@ You can also use cd to change the entire base URL, including the hostname.
 #+BEGIN_SRC http-prompt
 cd https://api.funtranslations.com/translate
 
-get doge.json text==helloworld
+get doge.json text==hellotwilio
 
 cd https://www.affirmations.dev
 
@@ -354,9 +349,9 @@ The main topics we've learned about:
   + JSON payloads
 - Saving things in the session context for re-use
   + Base URL and path
-  + Request data to be included with all requests
-- Filtering response data by piping it to shell programs
-- Using command history and auto-complete
+  + Request data or options to be included with all requests
+- Filtering response data by piping it to shell programs like grep, jq
+- Using command history and auto-complete to save typing
 
 There are a slew of other features that I'm leaving out, for brevity, but these are the ones I mostly use.
 
@@ -387,7 +382,7 @@ https://www.ravelry.com/api#projects_list
 #+BEGIN_SRC http-prompt
 source ravelry
 
-get projects/onlywade/list.json
+get projects/onlywade/list.json | jq .[].craft_name
 
 get <img_url> --download
 #+END_SRC
@@ -396,15 +391,15 @@ get <img_url> --download
 
 * Break for questions
 
-* Practice time!
+* Practice session!
 
 ** Capture the flag
 
 This type of activity is an infosec tradition designed to exercise cybersecurity and problem-solving skills. The objective is to complete a series of tasks (usually of increasing difficulty), eventually leading to acquisition of a password, file, or other piece of protected information (i.e. the "flag").
 
-In this case I've tailored the tasks to focus on API exploration in order to exercise human-driven HTTP client usage.
+In this case I've tailored the tasks to focus on API exploration, in order to exercise human-driven HTTP client usage.
 
-Also, the target challenge level is LOW. But watch out! The flag is protected by a guard dog.
+Also, the target difficulty level is LOW. But watch out! The flag is protected by a guard dog.
 
 Start by approaching the creature with a GET request to https://junkyard.digital/doggo.
 
@@ -419,7 +414,7 @@ https://docs.http-prompt.com
 Remember you can change the base URL/path with "cd" and then make relative requests:
 
 #+BEGIN_SRC http-prompt
-cd https://junkyard.digital.com
+cd https://junkyard.digital
 
 get /doggo
 #+END_SRC
@@ -431,6 +426,7 @@ get /doggo
 #+BEGIN_SRC http-prompt
 get /path key:value      # <--- send header with a single request
 key:value                # <--- save header in context to send with all #+END_SRC
+#+END_SRC
 
 ***** Query parameters
 
@@ -495,10 +491,9 @@ rm ~/.local/share/http-prompt/*
 
 To find out how to disable persistent history completely, check the manual.
 
-** Further reading, next steps
+** Next steps and further reading
 
 *** Try it out the next time you need to twiddle an API
-
 *** Check out the project page, documentation, and source code
 
 *** Learn about the underlying client library, HTTPie
@@ -510,3 +505,5 @@ https://httpie.io/
 **** Add support for curl format
 **** Fix bugs
 ** Q&A
+
+Ask away!
